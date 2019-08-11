@@ -9,7 +9,7 @@ Intel Core i7-8850H CPU 2.60GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical 
 Job=Core  Runtime=Core  
 
 ```
-|              Method |     Mean |     Error |    StdDev |   Median |
-|-------------------- |---------:|----------:|----------:|---------:|
-|                Save | 1.222 ms | 0.0636 ms | 0.1845 ms | 1.163 ms |
-| SaveWithTransaction | 1.230 ms | 0.0597 ms | 0.1713 ms | 1.171 ms |
+|              Method |     Mean |     Error |    StdDev |
+|-------------------- |---------:|----------:|----------:|
+|                Save | 1.108 ms | 0.0478 ms | 0.1387 ms |
+| SaveWithTransaction | 1.069 ms | 0.0137 ms | 0.0114 ms |

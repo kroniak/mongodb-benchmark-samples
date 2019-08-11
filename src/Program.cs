@@ -1,14 +1,16 @@
 ﻿using System;
 using BenchmarkDotNet.Running;
+using MongodbTransactions.TestCases;
 
-namespace mongodbtran
+namespace MongodbTransactions
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             BenchmarkRunner.Run<MultiDocs>();
             BenchmarkRunner.Run<MultiCollections>();
+            BenchmarkRunner.Run<MultiCollectionsUpdate>();
 
             Console.WriteLine("Job Done");
         }

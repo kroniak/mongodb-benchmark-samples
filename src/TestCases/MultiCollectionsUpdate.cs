@@ -3,17 +3,17 @@ using BenchmarkDotNet.Attributes;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace mongodbtran
+namespace MongodbTransactions.TestCases
 {
     [CoreJob]
-    public class MultiCollections
+    public class MultiCollectionsUpdate
     {
         private IMongoCollection<BsonDocument> _collectionBar;
         private IMongoCollection<BsonDocument> _collectionBaz;
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
 
-        public MultiCollections()
+        public MultiCollectionsUpdate()
         {
             _client = new MongoClient("mongodb://localhost:27017");
             _database = _client.GetDatabase("foo");
@@ -31,9 +31,9 @@ namespace mongodbtran
         }
 
         [Benchmark]
-        public void Save()
+        public void SaveAndUpdate()
         {
-            var document = new BsonDocument
+            var documentBar = new BsonDocument
             {
                 {"name", "MongoDB"},
                 {"type", "Database"},
@@ -46,32 +46,38 @@ namespace mongodbtran
                     }
                 }
             };
-            _collectionBar.InsertOne(document);
-            _collectionBaz.InsertOne(document);
+            var documentBaz = new BsonDocument
+            {
+                {"name", "MongoDB"},
+                {"type", "Database"},
+                {"count", 1},
+                {
+                    "info", new BsonDocument
+                    {
+                        {"x", 203},
+                        {"y", 102}
+                    }
+                }
+            };
+            _collectionBar.InsertOne(documentBar);
+            _collectionBaz.InsertOne(documentBaz);
+            
+            var filter = new BsonDocument("_id", documentBar["_id"]);
+            var update = new BsonDocument("$set", new BsonDocument("count", (int)documentBar["count"]-1));
+            _collectionBar.UpdateOne(filter, update);
+            
+            var filter2 = new BsonDocument("_id", documentBaz["_id"]);
+            var update2 = new BsonDocument("$set", new BsonDocument("count", (int)documentBaz["count"]-1));
+            _collectionBaz.UpdateOne(filter2, update2);
         }
 
         [Benchmark]
-        public void SaveWithTransaction()
+        public void SaveAndUpdateWithTransaction()
         {
-            var document = new BsonDocument
-            {
-                {"name", "MongoDB"},
-                {"type", "Database"},
-                {"count", 1},
-                {
-                    "info", new BsonDocument
-                    {
-                        {"x", 203},
-                        {"y", 102}
-                    }
-                }
-            };
-            
             using (var session = _client.StartSession())
             {
                 session.StartTransaction();
-                _collectionBar.InsertOne(document);
-                _collectionBaz.InsertOne(document);
+                SaveAndUpdate();
                 session.CommitTransaction();
             }
         }

@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace mongodbtran
+namespace MongodbTransactions.TestCases
 {
     [CoreJob]
     public class MultiDocs
@@ -60,7 +60,7 @@ namespace mongodbtran
             using (var session = _client.StartSession())
             {
                 session.StartTransaction();
-                _collection.InsertMany(_documents);
+                Save();
                 session.CommitTransaction();
             }
         }
