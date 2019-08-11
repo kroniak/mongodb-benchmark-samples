@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -36,7 +37,7 @@ namespace MongodbTransactions.TestCases
             CleanDb();
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public void Save()
         {
             var document = new BsonDocument
@@ -55,6 +56,26 @@ namespace MongodbTransactions.TestCases
             _collectionBar.InsertOne(document);
             _collectionBaz.InsertOne(document);
         }
+        
+        [Benchmark]
+        public async Task SaveAsync()
+        {
+            var document = new BsonDocument
+            {
+                {"name", "MongoDB"},
+                {"type", "Database"},
+                {"count", 1},
+                {
+                    "info", new BsonDocument
+                    {
+                        {"x", 203},
+                        {"y", 102}
+                    }
+                }
+            };
+            await _collectionBar.InsertOneAsync(document);
+            await _collectionBaz.InsertOneAsync(document);
+        }
 
         [Benchmark]
         public void SaveWithTransaction()
@@ -63,6 +84,17 @@ namespace MongodbTransactions.TestCases
             {
                 session.StartTransaction();
                 Save();
+                session.CommitTransaction();
+            }
+        }
+        
+        [Benchmark]
+        public async Task SaveWithTransactionAsync()
+        {
+            using (var session = _client.StartSession())
+            {
+                session.StartTransaction();
+                await SaveAsync();
                 session.CommitTransaction();
             }
         }

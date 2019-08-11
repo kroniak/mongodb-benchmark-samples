@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -15,9 +16,9 @@ namespace MongodbTransactions.TestCases
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
 
-        [Params(10, 50, 100)]
+        [Params(10, 50, 100)] 
         public int Count { get; set; }
-        
+
         public MultiDocs()
         {
             _client = new MongoClient("mongodb://localhost:27017");
@@ -30,7 +31,7 @@ namespace MongodbTransactions.TestCases
         {
             _database.DropCollection("bar");
             Console.WriteLine("Deleted Rows!!!");
-            
+
             _documents = Enumerable.Range(0, Count).Select(i => new BsonDocument
             {
                 {"counter", i},
@@ -47,17 +48,29 @@ namespace MongodbTransactions.TestCases
             });
             Console.WriteLine("Prepared Docs!!!");
         }
-        
+
         [GlobalCleanup]
         public void GlobalCleanup()
         {
             CleanDb();
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public void Save()
         {
             _collection.InsertMany(_documents);
+        }
+
+        [Benchmark]
+        public async Task SaveAsync()
+        {
+            await _collection.InsertManyAsync(_documents);
+        }
+
+        [Benchmark]
+        public void SaveParallel()
+        {
+            Parallel.ForEach(_documents, document => { _collection.InsertOne(document); });
         }
 
         [Benchmark]
@@ -67,6 +80,17 @@ namespace MongodbTransactions.TestCases
             {
                 session.StartTransaction();
                 Save();
+                session.CommitTransaction();
+            }
+        }
+
+        [Benchmark]
+        public async Task SaveWithTransactionAsync()
+        {
+            using (var session = _client.StartSession())
+            {
+                session.StartTransaction();
+                await SaveAsync();
                 session.CommitTransaction();
             }
         }
