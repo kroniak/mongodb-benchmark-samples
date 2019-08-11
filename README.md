@@ -6,4 +6,4 @@
 
 [Testing result for MultiCollectionUpdate](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.MultiCollectionsUpdate-report-github.md)
 
-[Testing result for compare Postres and Mongo inserting data](BenchmarkDotNet.Artifacts/results/MongodbTransactions.CompareTestCases.CompareMultiDocs-report-github.md)
+[Testing result for compare Postgres and Mongo inserting data](BenchmarkDotNet.Artifacts/results/MongodbTransactions.CompareTestCases.CompareMultiDocs-report-github.md)
