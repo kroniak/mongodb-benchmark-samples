@@ -5,13 +5,13 @@ using MongodbTransactions.TestCases;
 
 namespace MongodbTransactions
 {
-    class Program
+    internal class Program
     {
-        static void Main()
+        private static void Main()
         {
-//            BenchmarkRunner.Run<MultiDocs>();
-//            BenchmarkRunner.Run<MultiCollections>();
-//            BenchmarkRunner.Run<MultiCollectionsUpdate>();
+            BenchmarkRunner.Run<MultiDocs>();
+            BenchmarkRunner.Run<MultiCollections>();
+            BenchmarkRunner.Run<MultiCollectionsUpdate>();
             BenchmarkRunner.Run<CompareMultiDocs>();
 
             Console.WriteLine("Job Done");

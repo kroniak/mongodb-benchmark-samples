@@ -15,7 +15,7 @@ namespace MongodbTransactions.CompareTestCases
         private IEnumerable<TestModel> _documents;
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
-        const string connString = "Host=docker;Username=postgres;Password=mysecretpassword;Database=postgres";
+        private const string ConnString = "Host=docker;Username=postgres;Password=mysecretpassword;Database=postgres";
 
         [Params(10, 50, 100)] 
         public int Count { get; set; }
@@ -51,7 +51,7 @@ namespace MongodbTransactions.CompareTestCases
 
         private static void CleanPostgresDb()
         {
-            using (var conn = new NpgsqlConnection(connString))
+            using (var conn = new NpgsqlConnection(ConnString))
             {
                 conn.Open();
 
@@ -81,7 +81,7 @@ namespace MongodbTransactions.CompareTestCases
         [Benchmark]
         public void SavePostgres()
         {
-            using (var conn = new NpgsqlConnection(connString))
+            using (var conn = new NpgsqlConnection(ConnString))
             {
                 conn.Open();
                 conn.TypeMapper.UseJsonNet();
@@ -107,7 +107,7 @@ namespace MongodbTransactions.CompareTestCases
         [Benchmark]
         public void SavePostgresWithTransaction()
         {
-            using (var conn = new NpgsqlConnection(connString))
+            using (var conn = new NpgsqlConnection(ConnString))
             {
                 conn.Open();
                 conn.TypeMapper.UseJsonNet();
