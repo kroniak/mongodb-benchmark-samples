@@ -47,6 +47,12 @@ namespace MongodbTransactions.TestCases
             });
             Console.WriteLine("Prepared Docs!!!");
         }
+        
+        [GlobalCleanup]
+        public void GlobalCleanup()
+        {
+            CleanDb();
+        }
 
         [Benchmark]
         public void Save()

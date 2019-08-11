@@ -29,6 +29,12 @@ namespace MongodbTransactions.TestCases
 
             Console.WriteLine("Deleted Rows!!!");
         }
+        
+        [GlobalCleanup]
+        public void GlobalCleanup()
+        {
+            CleanDb();
+        }
 
         [Benchmark]
         public void SaveAndUpdate()
