@@ -9,19 +9,19 @@ Intel Core i7-8850H CPU 2.60GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical 
 Job=Core  Runtime=Core  
 
 ```
-|                      Method | Count |        Mean |        Error |       StdDev |      Median | Ratio | RatioSD |
-|---------------------------- |------ |------------:|-------------:|-------------:|------------:|------:|--------:|
-|                **SavePostgres** |    **10** |  **7,181.3 us** |   **168.838 us** |   **478.965 us** |  **7,179.3 us** | **12.10** |    **1.20** |
-| SavePostgresWithTransaction |    10 |  6,435.8 us |   152.117 us |   134.848 us |  6,413.1 us | 11.34 |    0.72 |
-|                   SaveMongo |    10 |    587.7 us |    11.597 us |    25.939 us |    592.2 us |  1.00 |    0.00 |
-|         SaveWithTransaction |    10 |    546.5 us |     7.751 us |     6.871 us |    545.7 us |  0.96 |    0.06 |
-|                             |       |             |              |              |             |       |         |
-|                **SavePostgres** |    **50** | **34,285.2 us** |   **748.609 us** | **2,207.291 us** | **34,310.1 us** | **36.76** |    **3.65** |
-| SavePostgresWithTransaction |    50 | 26,648.1 us |   481.336 us |   426.692 us | 26,556.7 us | 29.63 |    1.97 |
-|                   SaveMongo |    50 |    941.4 us |    28.305 us |    80.757 us |    932.1 us |  1.00 |    0.00 |
-|         SaveWithTransaction |    50 |    885.4 us |    18.189 us |    45.633 us |    879.9 us |  0.94 |    0.10 |
-|                             |       |             |              |              |             |       |         |
-|                **SavePostgres** |   **100** | **67,434.4 us** | **1,225.741 us** | **1,023.549 us** | **67,195.8 us** | **51.84** |    **2.93** |
-| SavePostgresWithTransaction |   100 | 48,447.9 us |   966.379 us | 2,258.879 us | 48,915.4 us | 37.50 |    3.12 |
-|                   SaveMongo |   100 |  1,294.6 us |    27.394 us |    77.713 us |  1,266.9 us |  1.00 |    0.00 |
-|         SaveWithTransaction |   100 |  1,305.3 us |    26.987 us |    66.705 us |  1,293.1 us |  1.01 |    0.08 |
+|                      Method | Count |        Mean |       Error |      StdDev | Ratio | RatioSD |
+|---------------------------- |------ |------------:|------------:|------------:|------:|--------:|
+|                **SavePostgres** |    **10** |  **8,595.7 us** |   **168.87 us** |   **236.73 us** | **13.73** |    **0.42** |
+| SavePostgresWithTransaction |    10 |  6,932.9 us |   135.95 us |   215.63 us | 10.88 |    0.43 |
+|                   SaveMongo |    10 |    634.5 us |    12.12 us |    12.45 us |  1.00 |    0.00 |
+|         SaveWithTransaction |    10 |    666.8 us |    16.40 us |    21.90 us |  1.05 |    0.04 |
+|                             |       |             |             |             |       |         |
+|                **SavePostgres** |    **50** | **41,577.5 us** |   **823.22 us** | **2,110.23 us** | **43.57** |    **2.99** |
+| SavePostgresWithTransaction |    50 | 29,399.7 us |   583.40 us | 1,217.77 us | 30.89 |    1.68 |
+|                   SaveMongo |    50 |    953.0 us |    18.79 us |    39.63 us |  1.00 |    0.00 |
+|         SaveWithTransaction |    50 |    959.9 us |    19.06 us |    20.39 us |  1.02 |    0.04 |
+|                             |       |             |             |             |       |         |
+|                **SavePostgres** |   **100** | **83,339.0 us** | **1,665.07 us** | **3,548.40 us** | **60.83** |    **4.03** |
+| SavePostgresWithTransaction |   100 | 59,496.1 us | 1,183.82 us | 3,319.56 us | 44.35 |    2.87 |
+|                   SaveMongo |   100 |  1,372.6 us |    29.77 us |    65.96 us |  1.00 |    0.00 |
+|         SaveWithTransaction |   100 |  1,358.6 us |    26.82 us |    57.15 us |  0.99 |    0.05 |

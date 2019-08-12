@@ -11,7 +11,7 @@ Job=Core  Runtime=Core
 ```
 |                            Method |     Mean |     Error |    StdDev | Ratio | RatioSD |
 |---------------------------------- |---------:|----------:|----------:|------:|--------:|
-|                     SaveAndUpdate | 2.076 ms | 0.0414 ms | 0.0968 ms |  1.00 |    0.00 |
-|                SaveAndUpdateAsync | 2.305 ms | 0.0460 ms | 0.0830 ms |  1.13 |    0.07 |
-|      SaveAndUpdateWithTransaction | 2.033 ms | 0.0405 ms | 0.0955 ms |  0.98 |    0.05 |
-| SaveAndUpdateWithTransactionAsync | 2.139 ms | 0.0421 ms | 0.0433 ms |  1.01 |    0.04 |
+|                     SaveAndUpdate | 2.364 ms | 0.0469 ms | 0.0702 ms |  1.00 |    0.00 |
+|                SaveAndUpdateAsync | 2.547 ms | 0.0507 ms | 0.1396 ms |  1.08 |    0.07 |
+|      SaveAndUpdateWithTransaction | 2.445 ms | 0.0489 ms | 0.0732 ms |  1.04 |    0.04 |
+| SaveAndUpdateWithTransactionAsync | 2.596 ms | 0.0511 ms | 0.0716 ms |  1.10 |    0.04 |
