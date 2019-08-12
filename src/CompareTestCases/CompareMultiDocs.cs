@@ -92,7 +92,7 @@ namespace MongodbTransactions.CompareTestCases
                     {
                         cmd.Connection = conn;
                         cmd.CommandText =
-                            "INSERT INTO test (counter, name, type, count, info) VALUES (@c,@n,@t,@co,@i)";
+                            $"INSERT INTO test (counter, name, type, count, info) VALUES (@c,@n,@t,@co,@i)";
                         cmd.Parameters.AddWithValue("c", document.Counter);
                         cmd.Parameters.AddWithValue("n", document.Name);
                         cmd.Parameters.AddWithValue("t", document.Type);
@@ -119,7 +119,7 @@ namespace MongodbTransactions.CompareTestCases
                     {
                         cmd.Connection = conn;
                         cmd.CommandText =
-                            "INSERT INTO test (counter, name, type, count, info) VALUES (@c,@n,@t,@co,@i)";
+                            $"INSERT INTO test (counter, name, type, count, info) VALUES (@c,@n,@t,@co,@i)";
                         cmd.Parameters.AddWithValue("c", document.Counter);
                         cmd.Parameters.AddWithValue("n", document.Name);
                         cmd.Parameters.AddWithValue("t", document.Type);
