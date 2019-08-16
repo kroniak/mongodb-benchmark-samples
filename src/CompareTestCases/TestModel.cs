@@ -12,10 +12,4 @@ namespace MongodbTransactions.CompareTestCases
 
         public TestStruct Info { get; set; }
     }
-
-    public struct TestStruct
-    {
-        public int X;
-        public int Y;
-    }
 }
