@@ -15,6 +15,7 @@ namespace MongodbTransactions.TestCases
         private IEnumerable<BsonDocument> _documents;
         private readonly MongoClient _client;
         private readonly IMongoDatabase _database;
+        private IEnumerable<InsertOneModel<BsonDocument>> _bulk;
 
         [Params(10, 50, 100)] 
         public int Count { get; set; }
@@ -46,6 +47,24 @@ namespace MongodbTransactions.TestCases
                     }
                 }
             });
+
+            _bulk = Enumerable.Range(0, Count).Select(i =>
+                new InsertOneModel<BsonDocument>(new BsonDocument
+                {
+                    {"counter", i},
+                    {"name", "MongoDB"},
+                    {"type", "Database"},
+                    {"count", 1},
+                    {
+                        "info", new BsonDocument
+                        {
+                            {"x", 203},
+                            {"y", 102}
+                        }
+                    }
+                }));
+
+
             Console.WriteLine("Prepared Docs!!!");
         }
 
@@ -59,6 +78,12 @@ namespace MongodbTransactions.TestCases
         public void Save()
         {
             _collection.InsertMany(_documents);
+        }
+
+        [Benchmark]
+        public void SaveBulk()
+        {
+            _collection.BulkWrite(_bulk);
         }
 
         [Benchmark]
@@ -80,6 +105,17 @@ namespace MongodbTransactions.TestCases
             {
                 session.StartTransaction();
                 Save();
+                session.CommitTransaction();
+            }
+        }
+        
+        [Benchmark]
+        public void SaveBulkWithTransaction()
+        {
+            using (var session = _client.StartSession())
+            {
+                session.StartTransaction();
+                SaveBulk();
                 session.CommitTransaction();
             }
         }
