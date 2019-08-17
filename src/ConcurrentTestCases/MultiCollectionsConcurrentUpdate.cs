@@ -103,8 +103,6 @@ namespace MongodbTransactions.ConcurrentTestCases
         [Benchmark]
         public void SaveAndUpdateWithTransaction()
         {
-//            UpdateDocs();
-
             var tasks = new List<Task>();
             foreach (var i in Enumerable.Range(1, ThreadCount))
             {
@@ -112,7 +110,8 @@ namespace MongodbTransactions.ConcurrentTestCases
                 {
                     using (var session = _client.StartSession())
                     {
-                        session.StartTransaction();
+                        session.StartTransaction(new TransactionOptions(
+                            new Optional<ReadConcern>(ReadConcern.Linearizable)));
                         SelectAndUpdate(_collectionBar, i, "Thread#" + i);
                         SelectAndUpdate(_collectionBaz, i, "Thread#" + i);
                         session.CommitTransaction();
@@ -129,14 +128,19 @@ namespace MongodbTransactions.ConcurrentTestCases
         }
 
         /// <summary>
-        /// Eq
-        ///     select * from foo
+        /// Eq for baz and bar
+        /// 
+        ///     select id from baz
         ///     where Spread> Count%12
         /// 
-        ///     update foo
+        ///     update baz
         ///     set counter
         ///     value xxx
         ///     where id in (...)
+        ///
+        ///     select counter
+        ///     from baz
+        ///     where LastUpdater != null
         /// </summary>
         /// <param name="collection"></param>
         /// <param name="step"></param>
@@ -147,7 +151,8 @@ namespace MongodbTransactions.ConcurrentTestCases
             string updaterName)
         {
             var filterSelect = Builders<TestConcurrentModel>.Filter.Eq(d => d.Spread, Count % 12);
-            var documents = collection.Find(filterSelect).Limit(100).ToList().Select(d => d.Id);
+            var projection = Builders<TestConcurrentModel>.Projection.Include(d => d.Id);
+            var documents = collection.Find(filterSelect).Project(projection).Limit(100).ToList().Select(d => d["_id"]);
 
             var bulk = new List<WriteModel<TestConcurrentModel>>();
 
@@ -162,12 +167,15 @@ namespace MongodbTransactions.ConcurrentTestCases
 
         private static void CheckUpdate(IMongoCollection<TestConcurrentModel> collection, int sum)
         {
+            var projection = Builders<TestConcurrentModel>.Projection
+                .Include(d => d.Counter)
+                .Exclude(d=>d.Id);
             var filterSelect = Builders<TestConcurrentModel>.Filter.Where(d => d.LastUpdater != null);
-            var documents = collection.Find(filterSelect).ToList();
+            var documents = collection.Find(filterSelect).Project(projection).ToList();
 
             documents.Should()
                 .NotBeEmpty()
-                .And.NotContain(d => d.Counter != sum);
+                .And.NotContain(d => d["Counter"] != sum);
         }
     }
 }
