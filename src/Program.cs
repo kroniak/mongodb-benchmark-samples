@@ -16,6 +16,7 @@ namespace MongodbTransactions
             BenchmarkRunner.Run<MultiCollectionsUpdate>();
             BenchmarkRunner.Run<CompareMultiDocs>();
             BenchmarkRunner.Run<MultiCollectionsConcurrentUpdate>();
+            BenchmarkRunner.Run<SchemaValidator>();
 
             Console.WriteLine("Job Done");
         }

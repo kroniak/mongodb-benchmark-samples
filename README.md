@@ -9,3 +9,5 @@
 [Testing result for compare Postgres and Mongo inserting data](BenchmarkDotNet.Artifacts/results/MongodbTransactions.CompareTestCases.CompareMultiDocs-report-github.md)
 
 [Testing result for concurrency Mongo update with transactions](BenchmarkDotNet.Artifacts/results/MongodbTransactions.ConcurrentTestCases.MultiCollectionsConcurrentUpdate-report-github.md)
+
+[Testing result for validation Mongo insert](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.SchemaValidator-report-github.md)
