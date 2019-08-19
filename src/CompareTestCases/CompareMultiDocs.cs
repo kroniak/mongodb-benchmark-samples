@@ -11,21 +11,14 @@ namespace MongodbTransactions.CompareTestCases
     [CoreJob]
     public class CompareMultiDocs
     {
-        private readonly IMongoCollection<TestModel> _collection;
         private IEnumerable<TestModel> _documents;
-        private readonly MongoClient _client;
-        private readonly IMongoDatabase _database;
-        private const string ConnString = "Host=docker;Username=postgres;Password=mysecretpassword;Database=postgres";
 
-        [Params(10, 50, 100)] 
-        public int Count { get; set; }
+        private const string SqlConnectionString =
+            "Host=docker;Username=postgres;Password=mysecretpassword;Database=postgres";
 
-        public CompareMultiDocs()
-        {
-            _client = new MongoClient("mongodb://localhost:27017");
-            _database = _client.GetDatabase("foo");
-            _collection = _database.GetCollection<TestModel>("bar");
-        }
+        private const string MongoDbConnectionString = "mongodb://localhost:27017";
+
+        [Params(10, 50, 100)] public int Count { get; set; }
 
         [GlobalSetup]
         public void Setup()
@@ -44,14 +37,15 @@ namespace MongodbTransactions.CompareTestCases
             Console.WriteLine("Deleted Rows!!!");
         }
 
-        private void CleanMongoDb()
+        private static void CleanMongoDb()
         {
-            _database.DropCollection("bar");
+            var database = new MongoClient(MongoDbConnectionString).GetDatabase("foo");
+            database.DropCollection("bar");
         }
 
         private static void CleanPostgresDb()
         {
-            using (var conn = new NpgsqlConnection(ConnString))
+            using (var conn = new NpgsqlConnection(SqlConnectionString))
             {
                 conn.Open();
 
@@ -81,7 +75,7 @@ namespace MongodbTransactions.CompareTestCases
         [Benchmark]
         public void SavePostgres()
         {
-            using (var conn = new NpgsqlConnection(ConnString))
+            using (var conn = new NpgsqlConnection(SqlConnectionString))
             {
                 conn.Open();
                 conn.TypeMapper.UseJsonNet();
@@ -103,11 +97,11 @@ namespace MongodbTransactions.CompareTestCases
                 }
             }
         }
-        
+
         [Benchmark]
         public void SavePostgresWithTransaction()
         {
-            using (var conn = new NpgsqlConnection(ConnString))
+            using (var conn = new NpgsqlConnection(SqlConnectionString))
             {
                 conn.Open();
                 conn.TypeMapper.UseJsonNet();
@@ -128,7 +122,7 @@ namespace MongodbTransactions.CompareTestCases
                         cmd.ExecuteNonQuery();
                     }
                 }
-                
+
                 transaction.Save("transaction");
             }
         }
@@ -136,16 +130,25 @@ namespace MongodbTransactions.CompareTestCases
         [Benchmark(Baseline = true)]
         public void SaveMongo()
         {
-            _collection.InsertMany(_documents);
+            SaveMongo(null);
+        }
+
+        private void SaveMongo(MongoClient client)
+        {
+            var cl = client ?? new MongoClient(MongoDbConnectionString);
+            var collection = cl.GetDatabase("foo")
+                .GetCollection<TestModel>("bar");
+            collection.InsertMany(_documents);
         }
 
         [Benchmark]
-        public void SaveWithTransaction()
+        public void SaveMongoWithTransaction()
         {
-            using (var session = _client.StartSession())
+            var client = new MongoClient(MongoDbConnectionString);
+            using (var session = client.StartSession())
             {
                 session.StartTransaction();
-                SaveMongo();
+                SaveMongo(client);
                 session.CommitTransaction();
             }
         }
