@@ -6,6 +6,8 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using FluentAssertions;
 using MongoDB.Driver;
+using MongodbTransactions.ConcurrentTestCases.Models;
+#pragma warning disable 618
 
 namespace MongodbTransactions.ConcurrentTestCases
 {

@@ -1,4 +1,4 @@
-namespace MongodbTransactions.ConcurrentTestCases
+namespace MongodbTransactions.ConcurrentTestCases.Models
 {
     public class TestStruct
     {

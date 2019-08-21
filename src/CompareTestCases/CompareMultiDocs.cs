@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using MongoDB.Driver;
+using MongodbTransactions.CompareTestCases.Models;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -18,7 +19,8 @@ namespace MongodbTransactions.CompareTestCases
 
         private const string MongoDbConnectionString = "mongodb://localhost:27017";
 
-        [Params(10, 50, 100)] public int Count { get; set; }
+        [Params(10, 50, 100)]
+        public int Count { get; set; }
 
         [GlobalSetup]
         public void Setup()

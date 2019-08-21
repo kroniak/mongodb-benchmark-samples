@@ -1,4 +1,4 @@
-namespace MongodbTransactions.CompareTestCases
+namespace MongodbTransactions.CompareTestCases.Models
 {
     public class TestModel
     {
