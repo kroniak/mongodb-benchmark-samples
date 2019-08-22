@@ -11,3 +11,5 @@
 [Testing result for concurrency Mongo update with transactions](BenchmarkDotNet.Artifacts/results/MongodbTransactions.ConcurrentTestCases.MultiCollectionsConcurrentUpdate-report-github.md)
 
 [Testing result for validation Mongo insert](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.SchemaValidator-report-github.md)
+
+[Blog Scenario 1 result](BenchmarkDotNet.Artifacts/results/MongodbTransactions.Blog.BlogNestedDocuments-report-github.md)

@@ -1,23 +1,23 @@
 create table test
 (
 	counter int,
-	name varchar(32),
-	type varchar(32),
+	name nvarchar(32),
+	type nvarchar(32),
 	count bigint,
-	info jsonb,
-	id bigserial not null
+	info nvarchar(max),
+	id bigint not null
 		constraint test_pk
 			primary key
 );
 
 create table users
 (
-	id bigserial not null
+	id bigint not null
 		constraint users_pk
 			primary key,
-	name varchar(50),
+	name nvarchar(50),
 	created date,
-	url varchar(255)
+	url nvarchar(255)
 );
 
 create index users_name_index
@@ -25,21 +25,23 @@ create index users_name_index
 
 create table articles_comments
 (
-	id bigserial not null
+	id bigint not null
 		constraint articles_comments_pk
-			primary key,
-	name varchar(50),
-	url varchar(255),
+			primary key IDENTITY(1,1),
+	name nvarchar(50),
+	url nvarchar(255),
 	created date,
-	text varchar(2048),
+	text nvarchar(2048),
 	userid bigint not null
 		constraint articles_comments_users_id_fk
 			references users,
-	comments jsonb
+	comments nvarchar(max)
 );
+
+alter table articles_comments
+add vUserId as json_value(comments,'$.UserId');
+
+create index articles_comments_commenets_index on articles_comments  (vUserId);
 
 create index articles_comments_userid_index
 	on articles_comments (userid);
-
-CREATE INDEX articles_comments_comments_index ON articles_comments USING GIN (comments);
-CREATE INDEX articles_comments_comments_1_index ON articles_comments USING GIN ((comments -> 'UserId'));
