@@ -2,7 +2,7 @@ using System;
 
 namespace MongodbTransactions.Blog.SqlModels
 {
-    public class CommentPg
+    public class CommentSql
     {
         public DateTime Created { get; set; }
 

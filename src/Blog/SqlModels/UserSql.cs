@@ -2,7 +2,7 @@ using System;
 
 namespace MongodbTransactions.Blog.SqlModels
 {
-    public class UserPg
+    public class UserSql
     {
         public long Id { get; set; }
         

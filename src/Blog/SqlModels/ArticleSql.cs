@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MongodbTransactions.Blog.SqlModels
 {
-    public class ArticlePg
+    public class ArticleSql
     {
         public long Id { get; set; }
         
@@ -17,6 +17,6 @@ namespace MongodbTransactions.Blog.SqlModels
 
         public long UserId { get; set; }
 
-        public List<CommentPg> Comments { get; set; }
+        public List<CommentSql> Comments { get; set; }
     }
 }

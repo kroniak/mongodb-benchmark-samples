@@ -33,9 +33,9 @@ namespace MongodbTransactions.Blog
 
         private const int Count = 100000;
 
-        private readonly List<UserPg> _usersSqlRowData = new List<UserPg>(Count / 100);
+        private readonly List<UserSql> _usersSqlRowData = new List<UserSql>(Count / 100);
         private readonly List<UserMn> _usersMnRowData = new List<UserMn>(Count / 100);
-        private readonly List<ArticlePg> _articlesSqlRowData = new List<ArticlePg>(Count);
+        private readonly List<ArticleSql> _articlesSqlRowData = new List<ArticleSql>(Count);
         private readonly List<ArticleMn> _articlesMnRowData = new List<ArticleMn>(Count);
 
         private readonly List<string> _userNames = new List<string>(Count / 100);
@@ -55,16 +55,15 @@ namespace MongodbTransactions.Blog
                 .GetDatabase("blog");
 
             Console.WriteLine("Start Global Blog Setup");
-            if (!_preparer.LoadData())
+            if (!_preparer.LoadSc1Data())
             {
-                _preparer.PrepareDocs();
-                _preparer.SaveData();
+                _preparer.PrepareSc1Docs();
+                _preparer.SaveSc1Data();
                 GlobalCleanup();
                 OpenMongodb();
                 Console.WriteLine("Inserting docs started..........");
                 InsertMongoDocs();
                 InsertPostgresDocs();
-//                InsertSqlServerDocs();
             }
             else
             {
@@ -72,13 +71,13 @@ namespace MongodbTransactions.Blog
             }
         }
 
-        public void GlobalCleanup()
+        private void GlobalCleanup()
         {
-            Console.WriteLine("Start delete Blog Rows");
+            var sw = Stopwatch.StartNew();
+            Console.Write("Start delete Blog Rows..........");
             CleanMongoDb();
             Cleaner.CleanPostgresDb();
-//            Cleaner.CleanSqlDb();
-            Console.WriteLine("Deleted Blog Rows!!!");
+            Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms.");
         }
 
         private void CleanMongoDb()
@@ -143,7 +142,6 @@ namespace MongodbTransactions.Blog
             using (var conn = new NpgsqlConnection(GeneralUtils.PgConnectionString))
             {
                 conn.Open();
-                conn.TypeMapper.UseJsonNet();
 
                 foreach (var document in _usersSqlRowData)
                 {
@@ -157,25 +155,34 @@ namespace MongodbTransactions.Blog
                         userCmd.ExecuteNonQuery();
                     }
                 }
-
-                foreach (var document in _articlesSqlRowData)
-                {
-                    using (var articleCmd =
-                        new NpgsqlCommand(
-                            "INSERT INTO articles_comments (name, created, url, text, userid, comments) VALUES (@n,@c,@u,@t,@user,@co)",
-                            conn))
-                    {
-                        articleCmd.Parameters.AddWithValue("n", document.Name);
-                        articleCmd.Parameters.AddWithValue("c", document.Created);
-                        articleCmd.Parameters.AddWithValue("u", document.Url);
-                        articleCmd.Parameters.AddWithValue("t", document.Text);
-                        articleCmd.Parameters.AddWithValue("user", document.UserId);
-                        articleCmd.Parameters.Add(new NpgsqlParameter("co", NpgsqlDbType.Jsonb)
-                            {Value = document.Comments});
-                        articleCmd.ExecuteNonQuery();
-                    }
-                }
             }
+
+            Parallel.ForEach(_articlesSqlRowData,
+                new ParallelOptions {MaxDegreeOfParallelism = 8},
+                document =>
+                {
+                    using (var conn = new NpgsqlConnection(GeneralUtils.PgConnectionString))
+                    {
+                        conn.Open();
+                        conn.TypeMapper.UseJsonNet();
+
+                        using (var articleCmd =
+                            new NpgsqlCommand(
+                                "INSERT INTO articles_comments (name, created, url, text, userid, comments) VALUES (@n,@c,@u,@t,@user,@co)",
+                                conn))
+                        {
+                            articleCmd.Parameters.AddWithValue("n", document.Name);
+                            articleCmd.Parameters.AddWithValue("c", document.Created);
+                            articleCmd.Parameters.AddWithValue("u", document.Url);
+                            articleCmd.Parameters.AddWithValue("t", document.Text);
+                            articleCmd.Parameters.AddWithValue("user", document.UserId);
+                            articleCmd.Parameters.Add(new NpgsqlParameter("co", NpgsqlDbType.Jsonb)
+                                {Value = document.Comments});
+                            articleCmd.ExecuteNonQuery();
+                        }
+                    }
+                });
+
 
             Console.WriteLine("Docs inserted into postgres at " + sw.ElapsedMilliseconds + " ms.");
 
@@ -197,75 +204,12 @@ namespace MongodbTransactions.Blog
 
             Console.WriteLine("Indices created into postgres at " + sw.ElapsedMilliseconds + " ms.");
         }
-
-        private void InsertSqlServerDocs()
-        {
-            Console.WriteLine("Docs inserting into sql started...........");
-            var sw = Stopwatch.StartNew();
-
-            using (var conn = new SqlConnection(GeneralUtils.SqlConnectionString))
-            {
-                conn.Open();
-
-                using (IDataReader reader = _usersSqlRowData.GetDataReader())
-                {
-                    using (var bcp = new SqlBulkCopy(conn))
-                    {
-                        bcp.DestinationTableName = "users";
-                        bcp.WriteToServer(reader);
-                    }
-                }
-            }
-
-            Parallel.ForEach(_articlesSqlRowData,
-                new ParallelOptions {MaxDegreeOfParallelism = 8},
-                document =>
-                {
-                    using (var conn = new SqlConnection(GeneralUtils.SqlConnectionString))
-                    {
-                        using (var articleCmd =
-                            new SqlCommand(
-                                "INSERT INTO articles_comments (name, created, url, text, userid, comments) VALUES (@n,@c,@u,@t,@user,@co)",
-                                conn))
-                        {
-                            conn.Open();
-                            articleCmd.Parameters.AddWithValue("n", document.Name);
-                            articleCmd.Parameters.AddWithValue("c", document.Created);
-                            articleCmd.Parameters.AddWithValue("u", document.Url);
-                            articleCmd.Parameters.AddWithValue("t", document.Text);
-                            articleCmd.Parameters.AddWithValue("user", document.UserId);
-                            articleCmd.Parameters.AddWithValue("co", JsonConvert.SerializeObject(document.Comments));
-                            articleCmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-            );
-
-//            foreach (var document in _articlesSqlRowData)
-//            {
-//                using (var articleCmd =
-//                    new SqlCommand(
-//                        "INSERT INTO articles_comments (name, created, url, text, userid, comments) VALUES (@n,@c,@u,@t,@user,@co)",
-//                        conn))
-//                {
-//                    articleCmd.Parameters.AddWithValue("n", document.Name);
-//                    articleCmd.Parameters.AddWithValue("c", document.Created);
-//                    articleCmd.Parameters.AddWithValue("u", document.Url);
-//                    articleCmd.Parameters.AddWithValue("t", document.Text);
-//                    articleCmd.Parameters.AddWithValue("user", document.UserId);
-//                    articleCmd.Parameters.AddWithValue("co", JsonConvert.SerializeObject(document.Comments));
-//                    articleCmd.ExecuteNonQuery();
-//                }
-//            }
-
-            Console.Write("done at " + sw.ElapsedMilliseconds + " ms.");
-        }
-
+        
         [Benchmark]
         public void MongoSelectUserByUserName()
         {
             var userFilter = Builders<UserMn>.Filter.Eq(u => u.Name, _faker.PickRandom(_userNames));
-            var user = _users.Find(userFilter).FirstOrDefault();
+            _users.Find(userFilter).FirstOrDefault();
         }
 
         [Benchmark]
@@ -286,26 +230,7 @@ namespace MongodbTransactions.Blog
                 }
             }
         }
-
-//        [Benchmark]
-        public void SqlSelectUserByUserName()
-        {
-            using (var conn = new SqlConnection(GeneralUtils.SqlConnectionString))
-            {
-                conn.Open();
-                using (var cmd =
-                    new SqlCommand("select id, name, url from users where name=@name", conn))
-                {
-                    cmd.Parameters.AddWithValue("@name", _faker.PickRandom(_userNames));
-                    using (var reader = cmd.ExecuteReader())
-                        while (reader.Read())
-                        {
-                            var id = reader[0];
-                        }
-                }
-            }
-        }
-
+        
         [Benchmark]
         public void MongoSelectCommentsByUserName()
         {
@@ -321,8 +246,7 @@ namespace MongodbTransactions.Blog
                 .Include(a => a.Comments)
                 .ElemMatch(a => a.Comments, comment => comment.UserId == user.Id);
 
-            var articles = _articles.Find(articlesFilter).Project(projection)
-                .ToList();
+            _articles.Find(articlesFilter).Project(projection).ToList();
         }
 
         [Benchmark]
@@ -331,14 +255,6 @@ namespace MongodbTransactions.Blog
             using (var conn = new NpgsqlConnection(GeneralUtils.PgConnectionString))
             {
                 conn.Open();
-
-//                long id;
-//                using (var cmd =
-//                    new NpgsqlCommand("select id from users where name=@name", conn))
-//                {
-//                    cmd.Parameters.AddWithValue("@name", _faker.PickRandom(_userNames));
-//                    id = (long) cmd.ExecuteScalar();
-//                }
 
                 using (var cmd =
                     new NpgsqlCommand(
@@ -350,12 +266,12 @@ namespace MongodbTransactions.Blog
                     cmd.Parameters.AddWithValue("@name", _faker.PickRandom(_userNames));
                     using (var reader = cmd.ExecuteReader())
                     {
-                        var articles = reader.Select(r => new ArticlePg
+                        var articles = reader.Select(r => new ArticleSql
                         {
                             Id = r.GetInt64(0),
                             Name = r.GetString(1),
                             Url = r.GetString(2),
-                            Comments = JsonConvert.DeserializeObject<List<CommentPg>>(
+                            Comments = JsonConvert.DeserializeObject<List<CommentSql>>(
                                 "[" + r.GetString(3) + "]")
                         });
                     }
@@ -387,12 +303,12 @@ namespace MongodbTransactions.Blog
                 {
                     using (var reader = cmd.ExecuteReader())
                     {
-                        var comments = reader.Select(r => new ArticlePg
+                        var comments = reader.Select(r => new ArticleSql
                         {
                             Id = r.GetInt64(0),
                             Name = r.GetString(1),
                             Url = r.GetString(2),
-                            Comments = JsonConvert.DeserializeObject<List<CommentPg>>(r.GetString(3))
+                            Comments = JsonConvert.DeserializeObject<List<CommentSql>>(r.GetString(3))
                         }).SelectMany(a => a.Comments).Where(c => c.UserId == id).ToList();
                     }
                 }

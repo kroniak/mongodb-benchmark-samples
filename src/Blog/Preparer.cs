@@ -18,13 +18,13 @@ namespace MongodbTransactions.Blog
         private readonly int _count;
         private readonly Faker _faker;
         private readonly List<string> _userNames;
-        private List<UserPg> _usersSqlRowData;
+        private List<UserSql> _usersSqlRowData;
         private List<UserMn> _usersMnRowData;
-        private List<ArticlePg> _articlesSqlRowData;
+        private List<ArticleSql> _articlesSqlRowData;
         private List<ArticleMn> _articlesMnRowData;
 
-        public Preparer(int count, Faker faker, List<string> userNames, List<UserPg> usersSqlRowData,
-            List<UserMn> usersMnRowData, List<ArticlePg> articlesSqlRowData, List<ArticleMn> articlesMnRowData)
+        public Preparer(int count, Faker faker, List<string> userNames, List<UserSql> usersSqlRowData,
+            List<UserMn> usersMnRowData, List<ArticleSql> articlesSqlRowData, List<ArticleMn> articlesMnRowData)
         {
             _count = count;
             _faker = faker ?? throw new ArgumentNullException(nameof(faker));
@@ -35,7 +35,7 @@ namespace MongodbTransactions.Blog
             _articlesMnRowData = articlesMnRowData ?? throw new ArgumentNullException(nameof(articlesMnRowData));
         }
 
-        public void PrepareDocs()
+        public void PrepareSc1Docs()
         {
             Console.Write("Preparing docs started..........");
             var sw = Stopwatch.StartNew();
@@ -81,12 +81,12 @@ namespace MongodbTransactions.Blog
                 _articlesMnRowData.AddRange(articles);
 
                 // generate row data for pg
-                var testCommentPg = new Faker<CommentPg>("ru")
+                var testCommentPg = new Faker<CommentSql>("ru")
                     .RuleFor(u => u.Text, f => f.Lorem.Text())
                     .RuleFor(u => u.Created, f => f.Date.Recent())
                     .RuleFor(u => u.UserId, f => f.Random.Number(1, _count / 100));
 
-                _articlesSqlRowData.AddRange(articles.Select(a => new ArticlePg
+                _articlesSqlRowData.AddRange(articles.Select(a => new ArticleSql
                 {
                     Name = a.Name,
                     Created = a.Created,
@@ -96,7 +96,7 @@ namespace MongodbTransactions.Blog
                     UserId = i
                 }));
 
-                _usersSqlRowData.Add(new UserPg
+                _usersSqlRowData.Add(new UserSql
                 {
                     Id = i,
                     Created = user.Created,
@@ -107,11 +107,12 @@ namespace MongodbTransactions.Blog
             Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms");
         }
 
-        public bool LoadData()
+        public bool LoadSc1Data()
         {
+            Console.Write("Docs loading started...........");
+            var sw = Stopwatch.StartNew();
             try
             {
-                var sw = Stopwatch.StartNew();
                 using (var file = File.OpenText(@"usersMnRowData.json"))
                 {
                     _usersMnRowData =
@@ -129,27 +130,30 @@ namespace MongodbTransactions.Blog
                 using (var file = File.OpenText(@"articlesRowData.json"))
                 {
                     _articlesSqlRowData =
-                        (List<ArticlePg>) new JsonSerializer().Deserialize(file, typeof(List<ArticlePg>));
+                        (List<ArticleSql>) new JsonSerializer().Deserialize(file, typeof(List<ArticleSql>));
                 }
 
                 using (var file = File.OpenText(@"usersRowData.json"))
                 {
-                    _usersSqlRowData = (List<UserPg>) new JsonSerializer().Deserialize(file, typeof(List<UserPg>));
+                    _usersSqlRowData = (List<UserSql>) new JsonSerializer().Deserialize(file, typeof(List<UserSql>));
                 }
 
                 // store user name for future usage
                 _userNames.AddRange(_usersMnRowData.Select(u => u.Name));
 
-                Console.WriteLine("Docs loaded at " + sw.ElapsedMilliseconds + " ms");
                 return true;
             }
             catch
             {
                 return false;
             }
+            finally
+            {
+                Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms");
+            }
         }
 
-        public void SaveData()
+        public void SaveSc1Data()
         {
             Console.Write("Docs saving started...........");
             var sw = Stopwatch.StartNew();
