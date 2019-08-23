@@ -104,3 +104,11 @@ alter table packages
 	add constraint packages_pk
 		primary key (id);
 
+create index if not exists packages_init_system_index
+	on packages (init_system);
+
+create index if not exists packages_record_is_auth_index
+	on packages (record_is_auth);
+
+create index if not exists packages_record_is_billed_index
+	on packages (record_is_billed);
