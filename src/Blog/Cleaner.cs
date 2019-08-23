@@ -4,7 +4,12 @@ namespace MongodbTransactions.Blog
 {
     public class Cleaner
     {
-        private const string DeleteSQLDataCommand = @"DELETE FROM articles_comments;DELETE FROM users";
+        private const string DeleteSQLDataCommand = @"
+                DELETE FROM comments;
+                DELETE FROM articles;
+                DELETE FROM articles_comments;
+                DELETE FROM users
+                ";
         
         public static void CleanPostgresDb()
         {
@@ -19,7 +24,10 @@ namespace MongodbTransactions.Blog
                         @"drop index if exists users_name_index;
                         drop index if exists articles_comments_userid_index;
                         drop index if exists articles_comments_comments_1_index;
-                        drop index if exists articles_comments_comments_index;";
+                        drop index if exists articles_comments_comments_index;
+                        drop index if exists articles_userid_index;
+                        drop index if exists comments_userid_index;
+                        drop index if exists comments_articleid_index";
                     cmd.ExecuteNonQuery();
                 }
 

@@ -1,17 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
-using BenchmarkDotNet.Loggers;
 using Bogus;
-using Bogus.DataSets;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using MongodbTransactions.Blog.MongodbModels;
 using MongodbTransactions.Blog.SqlModels;
@@ -94,7 +88,7 @@ namespace MongodbTransactions.Blog
             _users.Indexes.CreateOne(new JsonIndexKeysDefinition<UserMn>("{\"Name\" : 1 }"));
 //            _articles.Indexes.CreateOne(new JsonIndexKeysDefinition<ArticleMn>("{\"Created\" : 1 }"));
             _articles.Indexes.CreateOne(new JsonIndexKeysDefinition<ArticleMn>("{\"Comments.UserId\" : 1 }"));
-            _articles.Indexes.CreateOne(new JsonIndexKeysDefinition<ArticleMn>("{\"Comments.Text\" : 1 }"));
+//            _articles.Indexes.CreateOne(new JsonIndexKeysDefinition<ArticleMn>("{\"Comments.Text\" : 1 }"));
             Console.WriteLine("Opened mongo connection");
         }
 

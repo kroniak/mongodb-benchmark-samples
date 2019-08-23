@@ -2,9 +2,6 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using MongodbTransactions.Blog;
-using MongodbTransactions.CompareTestCases;
-using MongodbTransactions.ConcurrentTestCases;
-using MongodbTransactions.TestCases;
 
 namespace MongodbTransactions
 {
@@ -12,14 +9,17 @@ namespace MongodbTransactions
     {
         private static void Main()
         {
-            BenchmarkRunner.Run<MultiDocs>();
-            BenchmarkRunner.Run<MultiCollections>();
-            BenchmarkRunner.Run<MultiCollectionsUpdate>();
-            BenchmarkRunner.Run<CompareMultiDocs>();
-            BenchmarkRunner.Run<MultiCollectionsConcurrentUpdate>();
-            BenchmarkRunner.Run<SchemaValidator>();
+//            BenchmarkRunner.Run<MultiDocs>();
+//            BenchmarkRunner.Run<MultiCollections>();
+//            BenchmarkRunner.Run<MultiCollectionsUpdate>();
+//            BenchmarkRunner.Run<CompareMultiDocs>();
+//            BenchmarkRunner.Run<MultiCollectionsConcurrentUpdate>();
+//            BenchmarkRunner.Run<SchemaValidator>();
 //            BenchmarkRunner.Run<BlogNestedDocuments>(new DebugInProcessConfig());
-            BenchmarkRunner.Run<BlogNestedDocuments>();
+//            BenchmarkRunner.Run<BlogNestedDocuments>();
+//            BenchmarkRunner.Run<BlogSeparateDocuments>(new DebugInProcessConfig());
+            BenchmarkRunner.Run<BlogSeparateDocuments>();
+
 
             Console.WriteLine("Job Done");
         }
