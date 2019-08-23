@@ -81,3 +81,26 @@ create index comments_userid_index
 
 create index comments_articleid_index
 	on comments (articleid);
+
+create table packages
+(
+	id bigserial not null,
+	created date,
+	init_system varchar(100),
+	record_name varchar(100),
+	record_created date,
+	record_is_auth bool,
+	record_username varchar(100),
+	record_is_billed bool,
+	record_provider varchar(100),
+	record_is_done bool,
+	record_partner varchar(100)
+);
+
+create unique index packages_id_uindex
+	on packages (id);
+
+alter table packages
+	add constraint packages_pk
+		primary key (id);
+

@@ -8,7 +8,8 @@ namespace MongodbTransactions.Blog
                 DELETE FROM comments;
                 DELETE FROM articles;
                 DELETE FROM articles_comments;
-                DELETE FROM users
+                DELETE FROM users;
+                DELETE FROM packages;
                 ";
         
         public static void CleanPostgresDb()

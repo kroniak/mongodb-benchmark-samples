@@ -5,6 +5,7 @@ using MongodbTransactions.Blog;
 using MongodbTransactions.CompareTestCases;
 using MongodbTransactions.ConcurrentTestCases;
 using MongodbTransactions.TestCases;
+using MongodbTransactions.NoSql;
 
 namespace MongodbTransactions
 {
@@ -20,6 +21,7 @@ namespace MongodbTransactions
             BenchmarkRunner.Run<SchemaValidator>();
             BenchmarkRunner.Run<BlogNestedDocuments>();
             BenchmarkRunner.Run<BlogSeparateDocuments>();
+            BenchmarkRunner.Run<NoSqlTest>();
 
             Console.WriteLine("Job Done");
         }
