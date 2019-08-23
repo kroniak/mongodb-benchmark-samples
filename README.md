@@ -1,5 +1,15 @@
 # Mongodb transaction vs non-transaction operation benchmarks
 
+## Install
+
+Use scripts in folder ./runner for docker run
+run.mongodb.sh
+run.postgres.sh
+
+Use script ./runner/test.sh for run test
+
+## Results
+
 [Testing result for MultiDocs](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.MultiDocs-report-github.md)
 
 [Testing result for MultiCollection](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.MultiCollections-report-github.md)
