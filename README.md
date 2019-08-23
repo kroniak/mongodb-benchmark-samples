@@ -13,3 +13,5 @@
 [Testing result for validation Mongo insert](BenchmarkDotNet.Artifacts/results/MongodbTransactions.TestCases.SchemaValidator-report-github.md)
 
 [Blog Scenario 1 result](BenchmarkDotNet.Artifacts/results/MongodbTransactions.Blog.BlogNestedDocuments-report-github.md)
+
+[Blog Scenario 2 result](BenchmarkDotNet.Artifacts/results/MongodbTransactions.Blog.BlogSeparateDocuments-report-github.md)
