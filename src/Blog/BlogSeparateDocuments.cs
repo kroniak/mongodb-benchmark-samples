@@ -211,7 +211,7 @@ namespace MongodbTransactions.Blog
             Console.WriteLine("done Indexes created into postgres at " + sw.ElapsedMilliseconds + " ms.");
         }
 
-//        [Benchmark]
+        [Benchmark]
         public void MongoSelectCommentsByUserName()
         {
             var userFilter = Builders<UserMn>.Filter.Eq(u => u.Name, _faker.PickRandom(_userNames.ToArray()));

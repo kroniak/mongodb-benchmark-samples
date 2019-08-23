@@ -34,34 +34,30 @@ namespace MongodbTransactions.Blog
 
         private readonly List<string> _userNames = new List<string>(Count / 100);
         private readonly Faker _faker = new Faker("ru");
-        private readonly Preparer _preparer;
-
-        public BlogNestedDocuments()
-        {
-            _preparer = new Preparer(Count, _faker, _userNames, _usersSqlRowData, _usersMnRowData, _articlesSqlRowData,
-                _articlesMnRowData);
-        }
+        private Preparer _preparer;
 
         [GlobalSetup]
         public void Setup()
         {
+            _preparer = new Preparer(Count, _faker, _userNames, _usersSqlRowData, _usersMnRowData, _articlesSqlRowData,
+                _articlesMnRowData);
+            
             _database = new MongoClient(GeneralUtils.MongodbLocalhost)
                 .GetDatabase("blog");
 
             Console.WriteLine("Start Global Blog Setup");
-            if (!_preparer.LoadSc1Data())
+            if (!_preparer.LoadData())
             {
-                _preparer.PrepareSc1Docs();
-                _preparer.SaveSc1Data();
+                _preparer.PrepareDocs();
+                _preparer.SaveData();
+            }
+            else
+            {
                 GlobalCleanup();
                 OpenMongodb();
                 Console.WriteLine("Inserting docs started..........");
                 InsertMongoDocs();
                 InsertPostgresDocs();
-            }
-            else
-            {
-                OpenMongodb();
             }
         }
 

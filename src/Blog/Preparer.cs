@@ -35,7 +35,7 @@ namespace MongodbTransactions.Blog
             _articlesMnRowData = articlesMnRowData ?? throw new ArgumentNullException(nameof(articlesMnRowData));
         }
 
-        public void PrepareSc1Docs()
+        public void PrepareDocs()
         {
             Console.Write("Preparing docs started..........");
             var sw = Stopwatch.StartNew();
@@ -107,7 +107,7 @@ namespace MongodbTransactions.Blog
             Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms");
         }
 
-        public bool LoadSc1Data()
+        public bool LoadData()
         {
             Console.Write("Docs loading started...........");
             var sw = Stopwatch.StartNew();
@@ -143,8 +143,9 @@ namespace MongodbTransactions.Blog
 
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 return false;
             }
             finally
@@ -153,7 +154,7 @@ namespace MongodbTransactions.Blog
             }
         }
 
-        public void SaveSc1Data()
+        public void SaveData()
         {
             Console.Write("Docs saving started...........");
             var sw = Stopwatch.StartNew();
