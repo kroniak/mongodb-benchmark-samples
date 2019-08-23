@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 
@@ -20,6 +21,14 @@ namespace MongodbTransactions.Utils
             while (reader.Read())
             {
                 yield return projection(reader);
+            }
+        }
+        
+        public static void AddRange<T>(this ConcurrentBag<T> collection, IEnumerable<T> toAdd)
+        {
+            foreach (var element in toAdd)
+            {
+                collection.Add(element);
             }
         }
     }

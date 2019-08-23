@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using Bogus;
+using FluentAssertions;
 using MongoDB.Driver;
 using MongodbTransactions.Blog.MongodbModels;
 using MongodbTransactions.Blog.SqlModels;
 using MongodbTransactions.Utils;
-using Newtonsoft.Json;
 using Npgsql;
 
 #pragma warning disable 618
@@ -30,18 +29,19 @@ namespace MongodbTransactions.Blog
 
         private readonly ConcurrentBag<UserMn> _usersMnRowData = new ConcurrentBag<UserMn>();
         private readonly ConcurrentBag<ArticleMn> _articlesMnRowData = new ConcurrentBag<ArticleMn>();
-        private readonly ConcurrentBag<CommentMn> _commentsMnRowData = new ConcurrentBag<CommentMn>(Count * 100);
+        private readonly ConcurrentBag<CommentMn> _commentsMnRowData = new ConcurrentBag<CommentMn>();
 
-        private readonly ConcurrentBag<UserSql> _usersSqlRowData = new ConcurrentBag<UserSql>(Count);
-        private readonly ConcurrentBag<ArticleSql> _articlesSqlRowData = new ConcurrentBag<ArticleSql>(Count * 10);
-        private readonly ConcurrentBag<CommentSql> _commentSqlRowData = new ConcurrentBag<CommentSql>(Count * 100);
+        private readonly ConcurrentBag<UserSql> _usersSqlRowData = new ConcurrentBag<UserSql>();
+        private readonly ConcurrentBag<ArticleSql> _articlesSqlRowData = new ConcurrentBag<ArticleSql>();
+        private readonly ConcurrentBag<CommentSql> _commentSqlRowData = new ConcurrentBag<CommentSql>();
 
-        private readonly ConcurrentBag<string> _userNames = new ConcurrentBag<string>(Count);
+        private readonly ConcurrentBag<string> _userNames = new ConcurrentBag<string>();
 
         private readonly Faker _faker = new Faker("ru");
-        private readonly PreparerSeparate _preparer;
+        private PreparerSeparate _preparer;
 
-        public BlogSeparateDocuments()
+        [GlobalSetup]
+        public void Setup()
         {
             _preparer = new PreparerSeparate(
                 Count,
@@ -53,11 +53,7 @@ namespace MongodbTransactions.Blog
                 _articlesMnRowData,
                 _commentsMnRowData,
                 _commentSqlRowData);
-        }
-
-        [GlobalSetup]
-        public void Setup()
-        {
+            
             _database = new MongoClient(GeneralUtils.MongodbLocalhost)
                 .GetDatabase("blog_separate");
 
@@ -66,15 +62,14 @@ namespace MongodbTransactions.Blog
             {
                 _preparer.PrepareDocs();
                 _preparer.SaveData();
+            }
+            else
+            {
                 GlobalCleanup();
                 OpenMongodb();
                 Console.WriteLine("Inserting docs started..........");
                 InsertMongoDocs();
                 InsertPostgresDocs();
-            }
-            else
-            {
-                OpenMongodb();
             }
         }
 
@@ -127,7 +122,7 @@ namespace MongodbTransactions.Blog
                 foreach (var document in _usersSqlRowData)
                 {
                     using (var userCmd =
-                        new NpgsqlCommand("INSERT INTO users (id, name, created, url) VALUES (@id,@n,@c,@u)", 
+                        new NpgsqlCommand("INSERT INTO users (id, name, created, url) VALUES (@id,@n,@c,@u)",
                             conn))
                     {
                         userCmd.Parameters.AddWithValue("id", document.Id);
@@ -158,7 +153,13 @@ namespace MongodbTransactions.Blog
                             articleCmd.Parameters.AddWithValue("u", document.Url);
                             articleCmd.Parameters.AddWithValue("t", document.Text);
                             articleCmd.Parameters.AddWithValue("user", document.UserId);
-                            articleCmd.ExecuteNonQuery();
+                            try
+                            {
+                                articleCmd.ExecuteNonQuery();
+                            }
+                            catch
+                            {
+                            }
                         }
                     }
                 });
@@ -210,10 +211,10 @@ namespace MongodbTransactions.Blog
             Console.WriteLine("done Indexes created into postgres at " + sw.ElapsedMilliseconds + " ms.");
         }
 
-        [Benchmark]
+//        [Benchmark]
         public void MongoSelectCommentsByUserName()
         {
-            var userFilter = Builders<UserMn>.Filter.Eq(u => u.Name, _faker.PickRandom(_userNames));
+            var userFilter = Builders<UserMn>.Filter.Eq(u => u.Name, _faker.PickRandom(_userNames.ToArray()));
             var user = _users.Find(userFilter).FirstOrDefault();
 
             var commentsFilter = Builders<CommentMn>.Filter
@@ -226,10 +227,11 @@ namespace MongodbTransactions.Blog
                 var articlesFilter = Builders<ArticleMn>.Filter
                     .Where(a => a.Id == comment.ArticleId);
                 var article = _articles.Find(articlesFilter).FirstOrDefault();
+                article.Should().NotBeNull();
             });
         }
 
-//        [Benchmark]
+        [Benchmark]
         public void PostgresSelectCommentsByUserName()
         {
             using (var conn = new NpgsqlConnection(GeneralUtils.PgConnectionString))
@@ -238,22 +240,25 @@ namespace MongodbTransactions.Blog
 
                 using (var cmd =
                     new NpgsqlCommand(
-                        @"select t.id,t.name,t.url, t.v
-                from (select id, name, url, userid, jsonb_array_elements(comments)::jsonb as v from articles_comments) as t
-                join users as u on u.id=jsonb_extract_path_text(v,'UserId')::int
-                where u.name=@name", conn))
+                        @"select a.id, a.name, a.url, c.id, c.text, c.created
+                            from comments as c
+                             join users u on c.userid = u.id
+                             join articles a on c.articleid = a.id
+                            where u.name =@name;", conn))
                 {
-                    cmd.Parameters.AddWithValue("@name", _faker.PickRandom(_userNames));
+                    cmd.Parameters.AddWithValue("@name", _faker.PickRandom(_userNames.ToArray()));
                     using (var reader = cmd.ExecuteReader())
                     {
-                        var articles = reader.Select(r => new ArticleSql
+                        var articles = reader.Select(r => new
                         {
                             Id = r.GetInt64(0),
                             Name = r.GetString(1),
                             Url = r.GetString(2),
-                            Comments = JsonConvert.DeserializeObject<List<CommentSql>>(
-                                "[" + r.GetString(3) + "]")
+                            Cid=r.GetInt64(3),
+                            Text = r.GetString(4),
+                            Created = r.GetDateTime(5),
                         });
+                        articles.Should().NotBeEmpty();
                     }
                 }
             }

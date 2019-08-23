@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Bogus;
 using Bogus.DataSets;
 using MongoDB.Bson;
 using MongodbTransactions.Blog.MongodbModels;
 using MongodbTransactions.Blog.SqlModels;
+using MongodbTransactions.Utils;
 using Newtonsoft.Json;
 
 namespace MongodbTransactions.Blog
@@ -18,22 +20,25 @@ namespace MongodbTransactions.Blog
     {
         private readonly int _count;
         private readonly Faker _faker;
-        private readonly List<string> _userNames;
+        private readonly ConcurrentBag<string> _userNames;
+        private static long _counter;
         private ConcurrentBag<UserMn> _usersMnRowData;
-        private List<ArticleMn> _articlesMnRowData;
-        private List<CommentMn> _commentsMnRowData;
-        private List<CommentSql> _commentSqlRowData;
-        private List<ArticleSql> _articlesSqlRowData;
-        private List<UserSql> _usersSqlRowData;
+        private ConcurrentBag<ArticleMn> _articlesMnRowData;
+        private ConcurrentBag<CommentMn> _commentsMnRowData;
+        private ConcurrentBag<CommentSql> _commentSqlRowData;
+        private ConcurrentBag<ArticleSql> _articlesSqlRowData;
+        private ConcurrentBag<UserSql> _usersSqlRowData;
+        private ConcurrentBag<long> _ids = new ConcurrentBag<long>();
 
         public PreparerSeparate(int count,
-            Faker faker, List<string> userNames,
-            List<UserSql> usersSqlRowData,
+            Faker faker,
+            ConcurrentBag<string> userNames,
+            ConcurrentBag<UserSql> usersSqlRowData,
             ConcurrentBag<UserMn> usersMnRowData,
-            List<ArticleSql> articlesSqlRowData,
-            List<ArticleMn> articlesMnRowData,
-            List<CommentMn> commentMnRowData,
-            List<CommentSql> commentSqlRowData)
+            ConcurrentBag<ArticleSql> articlesSqlRowData,
+            ConcurrentBag<ArticleMn> articlesMnRowData,
+            ConcurrentBag<CommentMn> commentMnRowData,
+            ConcurrentBag<CommentSql> commentSqlRowData)
         {
             _count = count;
             _faker = faker ?? throw new ArgumentNullException(nameof(faker));
@@ -87,7 +92,7 @@ namespace MongodbTransactions.Blog
                     _usersMnRowData.Add(user);
                     _articlesMnRowData.AddRange(articles);
 
-                    Parallel.ForEach(articles, (article, pls, index) =>
+                    Parallel.ForEach(articles, article =>
                     {
                         var comments = new Faker<CommentMn>("ru")
                             .RuleFor(u => u.Id, f => ObjectId.GenerateNewId().ToString())
@@ -99,7 +104,8 @@ namespace MongodbTransactions.Blog
 
                         _commentsMnRowData.AddRange(comments);
 
-                        var articleId = index + _faker.Random.Number(0, _count * 10);
+                        var articleId = GetUniqInt();
+
                         _articlesSqlRowData.Add(new ArticleSql
                         {
                             Id = articleId,
@@ -114,7 +120,7 @@ namespace MongodbTransactions.Blog
                         {
                             Created = c.Created,
                             Text = c.Text,
-                            UserId = _faker.Random.Number(0, _count),
+                            UserId = _faker.Random.Number(0, _count - 1),
                             ArticleId = articleId
                         }));
                     });
@@ -131,48 +137,63 @@ namespace MongodbTransactions.Blog
             Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms");
         }
 
+        private static long GetUniqInt()
+        {
+            object o = new { };
+
+            lock (o)
+            {
+                _counter++;
+                return _counter;
+            }
+        }
+
         public bool LoadData()
         {
             Console.Write("Docs loading started...........");
             var sw = Stopwatch.StartNew();
             try
             {
-                using (var file = File.OpenText(@"usersMnRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/usersMnRowData2.json"))
                 {
-                    _usersMnRowData =
+                    _usersMnRowData.AddRange(
                         (ConcurrentBag<UserMn>) new JsonSerializer().Deserialize(file,
-                            typeof(List<UserMn>));
+                            typeof(ConcurrentBag<UserMn>)));
                 }
 
-                using (var file = File.OpenText(@"articlesMnRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/articlesMnRowData2.json"))
                 {
-                    _articlesMnRowData =
-                        (List<ArticleMn>) new JsonSerializer().Deserialize(file,
-                            typeof(List<ArticleMn>));
+                    _articlesMnRowData.AddRange(
+                        (ConcurrentBag<ArticleMn>) new JsonSerializer().Deserialize(file,
+                            typeof(ConcurrentBag<ArticleMn>)));
                 }
 
-                using (var file = File.OpenText(@"commentsMnRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/commentsMnRowData2.json"))
                 {
-                    _commentsMnRowData =
-                        (List<CommentMn>) new JsonSerializer().Deserialize(file,
-                            typeof(List<CommentMn>));
+                    _commentsMnRowData.AddRange(
+                        (ConcurrentBag<CommentMn>) new JsonSerializer().Deserialize(file,
+                            typeof(ConcurrentBag<CommentMn>)));
                 }
 
-                using (var file = File.OpenText(@"articlesRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/articlesRowData2.json"))
                 {
-                    _articlesSqlRowData =
-                        (List<ArticleSql>) new JsonSerializer().Deserialize(file, typeof(List<ArticleSql>));
+                    _articlesSqlRowData.AddRange(
+                        (ConcurrentBag<ArticleSql>) new JsonSerializer().Deserialize(file,
+                            typeof(ConcurrentBag<ArticleSql>)));
                 }
 
-                using (var file = File.OpenText(@"usersRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/usersRowData2.json"))
                 {
-                    _usersSqlRowData = (List<UserSql>) new JsonSerializer().Deserialize(file, typeof(List<UserSql>));
+                    _usersSqlRowData.AddRange(
+                        (ConcurrentBag<UserSql>) new JsonSerializer().Deserialize(file,
+                            typeof(ConcurrentBag<UserSql>)));
                 }
 
-                using (var file = File.OpenText(@"commentsRowData2.json"))
+                using (var file = File.OpenText(@"/tmp/commentsRowData2.json"))
                 {
-                    _commentSqlRowData =
-                        (List<CommentSql>) new JsonSerializer().Deserialize(file, typeof(List<CommentSql>));
+                    _commentSqlRowData.AddRange(
+                        (ConcurrentBag<CommentSql>) new JsonSerializer().Deserialize(file,
+                            typeof(ConcurrentBag<CommentSql>)));
                 }
 
                 // store user name for future usage
@@ -180,8 +201,9 @@ namespace MongodbTransactions.Blog
 
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 return false;
             }
             finally
@@ -196,12 +218,12 @@ namespace MongodbTransactions.Blog
             var sw = Stopwatch.StartNew();
             try
             {
-                File.WriteAllText(@"usersMnRowData2.json", JsonConvert.SerializeObject(_usersMnRowData));
-                File.WriteAllText(@"articlesMnRowData2.json", JsonConvert.SerializeObject(_articlesMnRowData));
-                File.WriteAllText(@"commentsMnRowData2.json", JsonConvert.SerializeObject(_commentsMnRowData));
-                File.WriteAllText(@"articlesRowData2.json", JsonConvert.SerializeObject(_articlesSqlRowData));
-                File.WriteAllText(@"usersRowData2.json", JsonConvert.SerializeObject(_usersSqlRowData));
-                File.WriteAllText(@"commentsRowData2.json", JsonConvert.SerializeObject(_commentSqlRowData));
+                File.WriteAllText(@"/tmp/usersMnRowData2.json", JsonConvert.SerializeObject(_usersMnRowData));
+                File.WriteAllText(@"/tmp/articlesMnRowData2.json", JsonConvert.SerializeObject(_articlesMnRowData));
+                File.WriteAllText(@"/tmp/commentsMnRowData2.json", JsonConvert.SerializeObject(_commentsMnRowData));
+                File.WriteAllText(@"/tmp/articlesRowData2.json", JsonConvert.SerializeObject(_articlesSqlRowData));
+                File.WriteAllText(@"/tmp/usersRowData2.json", JsonConvert.SerializeObject(_usersSqlRowData));
+                File.WriteAllText(@"/tmp/commentsRowData2.json", JsonConvert.SerializeObject(_commentSqlRowData));
             }
             catch (Exception e)
             {

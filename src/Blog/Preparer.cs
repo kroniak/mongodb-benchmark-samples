@@ -113,27 +113,27 @@ namespace MongodbTransactions.Blog
             var sw = Stopwatch.StartNew();
             try
             {
-                using (var file = File.OpenText(@"usersMnRowData.json"))
+                using (var file = File.OpenText(@"/tmp/usersMnRowData.json"))
                 {
                     _usersMnRowData =
                         (List<UserMn>) new JsonSerializer().Deserialize(file,
                             typeof(List<UserMn>));
                 }
 
-                using (var file = File.OpenText(@"articlesMnRowData.json"))
+                using (var file = File.OpenText(@"/tmp/articlesMnRowData.json"))
                 {
                     _articlesMnRowData =
                         (List<ArticleMn>) new JsonSerializer().Deserialize(file,
                             typeof(List<ArticleMn>));
                 }
 
-                using (var file = File.OpenText(@"articlesRowData.json"))
+                using (var file = File.OpenText(@"/tmp/articlesRowData.json"))
                 {
                     _articlesSqlRowData =
                         (List<ArticleSql>) new JsonSerializer().Deserialize(file, typeof(List<ArticleSql>));
                 }
 
-                using (var file = File.OpenText(@"usersRowData.json"))
+                using (var file = File.OpenText(@"/tmp/usersRowData.json"))
                 {
                     _usersSqlRowData = (List<UserSql>) new JsonSerializer().Deserialize(file, typeof(List<UserSql>));
                 }
@@ -157,10 +157,10 @@ namespace MongodbTransactions.Blog
         {
             Console.Write("Docs saving started...........");
             var sw = Stopwatch.StartNew();
-            File.WriteAllText(@"usersMnRowData.json", JsonConvert.SerializeObject(_usersMnRowData));
-            File.WriteAllText(@"articlesMnRowData.json", JsonConvert.SerializeObject(_articlesMnRowData));
-            File.WriteAllText(@"articlesRowData.json", JsonConvert.SerializeObject(_articlesSqlRowData));
-            File.WriteAllText(@"usersRowData.json", JsonConvert.SerializeObject(_usersSqlRowData));
+            File.WriteAllText(@"/tmp/usersMnRowData.json", JsonConvert.SerializeObject(_usersMnRowData));
+            File.WriteAllText(@"/tmp/articlesMnRowData.json", JsonConvert.SerializeObject(_articlesMnRowData));
+            File.WriteAllText(@"/tmp/articlesRowData.json", JsonConvert.SerializeObject(_articlesSqlRowData));
+            File.WriteAllText(@"/tmp/usersRowData.json", JsonConvert.SerializeObject(_usersSqlRowData));
             Console.WriteLine("done at " + sw.ElapsedMilliseconds + " ms");
         }
     }
