@@ -13,7 +13,7 @@
     <PackageReference Include="Bogus" Version="28.0.2" />
     <PackageReference Include="Bogus.Tools.Analyzer" Version="28.0.2" />
     <PackageReference Include="FluentAssertions" Version="5.8.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.8.1" />
+    <PackageReference Include="MongoDB.Driver" Version="2.19.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Npgsql" Version="4.0.8" />
     <PackageReference Include="Npgsql.Json.NET" Version="4.0.8" />
